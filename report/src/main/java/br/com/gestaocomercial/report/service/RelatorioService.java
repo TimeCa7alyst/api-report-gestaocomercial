@@ -12,6 +12,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +65,7 @@ public class RelatorioService {
         produtoRep.save(relatorio);
     }
 
-    public List<VendaReport> relatorioVendasFiltrado(LocalDate dataInicio, LocalDate dataFim, String statusPagamento) {
+    public Page<VendaReport> relatorioVendasFiltrado(LocalDate dataInicio, LocalDate dataFim, String statusPagamento, Pageable pageable) {
         Specification<VendaReport> spec = (root, query, cb) -> cb.conjunction();
 
         if (dataInicio != null && dataFim != null) {
@@ -73,10 +75,10 @@ public class RelatorioService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("statusPagamento"), statusPagamento));
         }
 
-        return vendaRep.findAll(spec);
+        return vendaRep.findAll(spec, pageable);
     }
 
-    public List<OrcamentoReport> relatorioOrcamentoFiltrado(String status, LocalDate dataCriacao, LocalDate dataValidade) {
+    public Page<OrcamentoReport> relatorioOrcamentoFiltrado(String status, LocalDate dataCriacao, LocalDate dataValidade, Pageable pageable) {
         Specification<OrcamentoReport> spec = ((root, query, cb) -> cb.conjunction());
 
         if (dataCriacao != null && dataValidade != null) {
@@ -86,10 +88,10 @@ public class RelatorioService {
         if (status != null && !status.isBlank()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("statusOrcamento"), status));
         }
-        return orcamentoRep.findAll(spec);
+        return orcamentoRep.findAll(spec, pageable);
     }
 
-    public List<ClienteReport> relatorioClientesFiltrado(String statusCliente, String cidade) {
+    public Page<ClienteReport> relatorioClientesFiltrado(String statusCliente, String cidade, Pageable pageable) {
         Specification<ClienteReport> spec = ((root, query, cb) -> cb.conjunction());
 
         if (statusCliente != null && !statusCliente.isEmpty()) {
@@ -99,7 +101,7 @@ public class RelatorioService {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("cidade"), cidade));
         }
 
-        return clienteRep.findAll(spec);
+        return clienteRep.findAll(spec, pageable);
     }
 
     public byte[] exportarVendasExcel(List<VendaReport> vendas) {
