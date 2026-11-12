@@ -76,8 +76,21 @@ public class RelatorioService {
         return vendaRep.findAll(spec);
     }
 
+    public List<OrcamentoReport> relatorioOrcamentoFiltrado(String status, LocalDate dataCriacao, LocalDate dataValidade) {
+        Specification<OrcamentoReport> spec = ((root, query, cb) -> cb.conjunction());
+
+        if (dataCriacao != null && dataValidade != null) {
+            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.between(root.get("dataCriacao"), dataCriacao, dataValidade));
+        }
+
+        if (status != null && !status.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("statusOrcamento"), status));
+        }
+        return orcamentoRep.findAll(spec);
+    }
+
     public List<ClienteReport> relatorioClientesFiltrado(String statusCliente, String cidade) {
-        Specification<ClienteReport> spec = Specification.where((Specification<ClienteReport>) null);
+        Specification<ClienteReport> spec = ((root, query, cb) -> cb.conjunction());
 
         if (statusCliente != null && !statusCliente.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("statusCliente"), statusCliente));
@@ -162,6 +175,141 @@ public class RelatorioService {
             return out.toByteArray();
         } catch (DocumentException | IOException e) {
             throw new RuntimeException("Erro ao gerar PDF", e);
+        }
+    }
+
+    public byte[] exportarClientesPdf(List<ClienteReport> clientes) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Paragraph title = new Paragraph("Relatório de Clientes", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph(" "));
+
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            table.addCell("ID");
+            table.addCell("Nome");
+            table.addCell("Tipo");
+            table.addCell("Status");
+            table.addCell("Cidade/UF");
+            table.addCell("Email");
+
+            for (ClienteReport c : clientes) {
+                table.addCell(String.valueOf(c.getId()));
+                table.addCell(c.getNome());
+                table.addCell(c.getTipo());
+                table.addCell(c.getStatusCliente());
+                table.addCell((c.getCidade() != null ? c.getCidade() : "") + " / " + (c.getEstado() != null ? c.getEstado() : ""));
+                table.addCell(c.getEmail() != null ? c.getEmail() : "");
+            }
+
+            document.add(table);
+            document.close();
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar PDF de clientes", e);
+        }
+    }
+
+    public byte[] exportarClientesExcel(List<ClienteReport> clientes) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Clientes");
+            Row headerRow = sheet.createRow(0);
+
+            String[] colunas = {"ID", "Nome", "Tipo", "Status", "Cidade", "Estado", "Email", "Data Cadastro"};
+            for (int i = 0; i < colunas.length; i++) {
+                headerRow.createCell(i).setCellValue(colunas[i]);
+            }
+
+            int rowIdx = 1;
+            for (ClienteReport c : clientes) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(c.getId());
+                row.createCell(1).setCellValue(c.getNome());
+                row.createCell(2).setCellValue(c.getTipo());
+                row.createCell(3).setCellValue(c.getStatusCliente());
+                row.createCell(4).setCellValue(c.getCidade());
+                row.createCell(5).setCellValue(c.getEstado());
+                row.createCell(6).setCellValue(c.getEmail());
+                row.createCell(7).setCellValue(c.getDataCadastro() != null ? c.getDataCadastro().toString() : "");
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao gerar Excel de clientes", e);
+        }
+    }
+
+    public byte[] exportarOrcamentosPdf(List<OrcamentoReport> orcamentos) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Paragraph title = new Paragraph("Relatório de Orçamentos", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph(" "));
+
+            PdfPTable table = new PdfPTable(6);
+            table.setWidthPercentage(100);
+            table.addCell("ID");
+            table.addCell("Cliente");
+            table.addCell("Status");
+            table.addCell("Valor Total");
+            table.addCell("Desconto");
+            table.addCell("Data Criação");
+
+            for (OrcamentoReport o : orcamentos) {
+                table.addCell(String.valueOf(o.getId()));
+                table.addCell(o.getClienteNome());
+                table.addCell(o.getStatusOrcamento());
+                table.addCell("R$ " + o.getValorTotal());
+                table.addCell("R$ " + o.getDesconto());
+                table.addCell(o.getDataCriacao() != null ? o.getDataCriacao().toString() : "");
+            }
+
+            document.add(table);
+            document.close();
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar PDF de orçamentos", e);
+        }
+    }
+
+    public byte[] exportarOrcamentosExcel(List<OrcamentoReport> orcamentos) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Orçamentos");
+            Row headerRow = sheet.createRow(0);
+
+            String[] colunas = {"ID", "ID Cliente", "Nome Cliente", "Status", "Valor Total", "Desconto", "Data Criação", "Data Validade"};
+            for (int i = 0; i < colunas.length; i++) {
+                headerRow.createCell(i).setCellValue(colunas[i]);
+            }
+
+            int rowIdx = 1;
+            for (OrcamentoReport o : orcamentos) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(o.getId());
+                row.createCell(1).setCellValue(o.getClienteId());
+                row.createCell(2).setCellValue(o.getClienteNome());
+                row.createCell(3).setCellValue(o.getStatusOrcamento());
+                row.createCell(4).setCellValue(o.getValorTotal() != null ? o.getValorTotal().doubleValue() : 0.0);
+                row.createCell(5).setCellValue(o.getDesconto() != null ? o.getDesconto().doubleValue() : 0.0);
+                row.createCell(6).setCellValue(o.getDataCriacao() != null ? o.getDataCriacao().toString() : "");
+                row.createCell(7).setCellValue(o.getDataValidade() != null ? o.getDataValidade().toString() : "");
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Erro ao gerar Excel de orçamentos", e);
         }
     }
 }

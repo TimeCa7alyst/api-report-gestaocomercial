@@ -1,5 +1,7 @@
 package br.com.gestaocomercial.report.controller;
 
+import br.com.gestaocomercial.report.model.ClienteReport;
+import br.com.gestaocomercial.report.model.OrcamentoReport;
 import br.com.gestaocomercial.report.model.VendaReport;
 import br.com.gestaocomercial.report.service.RelatorioService;
 import org.springframework.http.HttpHeaders;
@@ -51,6 +53,64 @@ public class RelatorioController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=vendas.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
+    }
+
+    @GetMapping("/clientes/exportar/pdf")
+    public ResponseEntity<byte[]> exportarPdfClientes(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String cidade) {
+
+        List<ClienteReport> filtrados = relatorioService.relatorioClientesFiltrado(status, cidade);
+        byte[] pdf = relatorioService.exportarClientesPdf(filtrados);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=clientes.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @GetMapping("/clientes/exportar/excel")
+    public ResponseEntity<byte[]> exportarExcelClientes(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String cidade) {
+
+        List<ClienteReport> filtrados = relatorioService.relatorioClientesFiltrado(status, cidade);
+        byte[] excel = relatorioService.exportarClientesExcel(filtrados);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=clientes.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
+    }
+
+    @GetMapping("/orcamentos/exportar/pdf")
+    public ResponseEntity<byte[]> exportarPdfOrcamentos(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) LocalDate dataInicio,
+            @RequestParam(required = false) LocalDate dataFim) {
+
+        List<OrcamentoReport> filtrados = relatorioService.relatorioOrcamentoFiltrado(status, dataInicio, dataFim);
+        byte[] pdf = relatorioService.exportarOrcamentosPdf(filtrados);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=orcamentos.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+    }
+
+    @GetMapping("/orcamentos/exportar/excel")
+    public ResponseEntity<byte[]> exportarExcelOrcamentos(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) LocalDate dataInicio,
+            @RequestParam(required = false) LocalDate dataFim) {
+
+        List<OrcamentoReport> filtrados = relatorioService.relatorioOrcamentoFiltrado(status, dataInicio, dataFim);
+        byte[] excel = relatorioService.exportarOrcamentosExcel(filtrados);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=orcamentos.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(excel);
     }
