@@ -2,36 +2,88 @@ package br.com.gestaocomercial.report.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
 
 @Entity
-@Table(name = "tb_venda_report")
+@Table(name = "venda_report")
 public class VendaReport {
 
     @Id
-    private Long id;
-    private String nomeCliente;
-    private BigDecimal valorTotal;
-    private LocalDateTime dataVenda;
+    private Integer id;
+    private Integer orcamentoId;
+    private Integer clienteId;
+    private LocalDate dataCriacao;
+    private String statusPagamento;
+    private BigDecimal valorFinal;
+    private Float notaAvaliacao;
 
     public VendaReport() {}
 
-    public VendaReport(Long id, String nomeCliente, BigDecimal valorTotal, LocalDateTime dataVenda) {
+    public VendaReport(Integer id, Integer orcamentoId, Integer clienteId, LocalDate dataCriacao,
+                       String statusPagamento, BigDecimal valorFinal, Float notaAvaliacao) {
         this.id = id;
-        this.nomeCliente = nomeCliente;
-        this.valorTotal = valorTotal;
-        this.dataVenda = dataVenda;
+        this.orcamentoId = orcamentoId;
+        this.clienteId = clienteId;
+        this.dataCriacao = dataCriacao;
+        this.statusPagamento = statusPagamento;
+        this.valorFinal = valorFinal;
+        this.notaAvaliacao = notaAvaliacao;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public String getNomeCliente() { return nomeCliente; }
-    public void setNomeCliente(String nomeCliente) { this.nomeCliente = nomeCliente; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public BigDecimal getValorTotal() { return valorTotal; }
-    public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
+    public Integer getOrcamentoId() {
+        return orcamentoId;
+    }
 
-    public LocalDateTime getDataVenda() { return dataVenda; }
-    public void setDataVenda(LocalDateTime dataVenda) { this.dataVenda = dataVenda; }
+    public void setOrcamentoId(Integer orcamentoId) {
+        this.orcamentoId = orcamentoId;
+    }
+
+    public Integer getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(Integer clienteId) {
+        this.clienteId = clienteId;
+    }
+
+    public LocalDate getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(LocalDate dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
+    public String getStatusPagamento() {
+        return statusPagamento;
+    }
+
+    public void setStatusPagamento(String statusPagamento) {
+        this.statusPagamento = statusPagamento;
+    }
+
+    public BigDecimal getValorFinal() {
+        return valorFinal;
+    }
+
+    public void setValorFinal(BigDecimal valorFinal) {
+        this.valorFinal = valorFinal;
+    }
+
+    public Float getNotaAvaliacao() {
+        return notaAvaliacao;
+    }
+
+    public void setNotaAvaliacao(Float notaAvaliacao) {
+        this.notaAvaliacao = notaAvaliacao;
+    }
 }
