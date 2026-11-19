@@ -1,13 +1,30 @@
 package br.com.gestaocomercial.report.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.SQLInsert;
+import org.springframework.data.domain.Persistable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-
 @Entity
 @Table(name = "venda_report")
-public class VendaReport {
+@SQLInsert(sql = """
+    INSERT INTO venda_report (cliente_id, data_criacao, nota_avaliacao, orcamento_id, status_pagamento, valor_final, id, ultima_atualizacao)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(6))
+    ON DUPLICATE KEY UPDATE
+        cliente_id = VALUES(cliente_id),
+        data_criacao = VALUES(data_criacao),
+        nota_avaliacao = VALUES(nota_avaliacao),
+        orcamento_id = VALUES(orcamento_id),
+        status_pagamento = VALUES(status_pagamento),
+        valor_final = VALUES(valor_final),
+        ultima_atualizacao = NOW(6)
+    """)
+public class VendaReport implements Persistable<Integer> {
 
     @Id
     private Integer id;
@@ -31,6 +48,13 @@ public class VendaReport {
         this.notaAvaliacao = notaAvaliacao;
     }
 
+    @Override
+    @Transient
+    public boolean isNew() {
+        return true;
+    }
+
+    @Override
     public Integer getId() {
         return id;
     }

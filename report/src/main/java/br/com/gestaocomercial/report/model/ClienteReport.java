@@ -3,12 +3,27 @@ package br.com.gestaocomercial.report.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.SQLInsert;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "cliente_report")
-public class ClienteReport {
+@SQLInsert(sql = """
+    INSERT INTO cliente_report (cidade, data_cadastro, email, estado, nome, status_cliente, tipo, id, ultima_atualizacao)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(6))
+    ON DUPLICATE KEY UPDATE
+        cidade = VALUES(cidade),
+        email = VALUES(email),
+        estado = VALUES(estado),
+        nome = VALUES(nome),
+        status_cliente = VALUES(status_cliente),
+        tipo = VALUES(tipo),
+        ultima_atualizacao = NOW(6)
+    """)
+public class ClienteReport implements Persistable<Integer> {
     @Id
     private Integer id;
     private String nome;
@@ -33,6 +48,13 @@ public class ClienteReport {
         this.email = email;
     }
 
+    @Override
+    @Transient
+    public boolean isNew() {
+        return true;
+    }
+
+    @Override
     public Integer getId() {
         return id;
     }
